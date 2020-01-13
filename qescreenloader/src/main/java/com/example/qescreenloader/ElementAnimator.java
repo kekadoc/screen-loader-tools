@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public abstract class ElementAnimator {
-    private static final String TAG = "ElementAnimator-TAG";
 
     private ArrayList<View> views;
 
@@ -124,7 +123,6 @@ public abstract class ElementAnimator {
                     .onEnd(new Subscriber.Twins<Path<View, Float>, Animator>() {
                         @Override
                         public void onCall(Path<View, Float> first, Animator second) {
-                            Log.e(TAG, "onCall: " + getViews().size() + "  " + view);
                             animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
                         }
                     })

@@ -17,7 +17,6 @@ import com.qegame.qeutil.androids.QeViews;
 import java.util.ArrayList;
 
 public class QeScreenLoader extends Fragment {
-    private static final String TAG = "QeScreenLoader-TAG";
 
     enum Type {
         WAVE_TOP() {
@@ -111,7 +110,6 @@ public class QeScreenLoader extends Fragment {
         elementContainer.removeAllViews();
         for (int i = 0; i < elementCount; i++) {
             View view = initElement(i);
-            Log.e(TAG, "initElements: " + view);
             elements.add(view);
             elementContainer.addView(view);
             QeViews.setMargins(view, elementMargin[0], elementMargin[1], elementMargin[2], elementMargin[3]);
