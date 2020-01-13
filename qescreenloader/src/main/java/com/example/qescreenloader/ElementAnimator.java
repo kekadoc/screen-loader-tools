@@ -1,6 +1,7 @@
 package com.example.qescreenloader;
 
 import android.animation.Animator;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -11,8 +12,10 @@ import com.qegame.animsimple.path.TranslationY;
 import com.qegame.qeutil.listening.subscriber.Subscriber;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public abstract class ElementAnimator {
+    private static final String TAG = "ElementAnimator-TAG";
 
     private ArrayList<View> views;
 
@@ -21,11 +24,17 @@ public abstract class ElementAnimator {
         startAnimation();
     }
 
+    public final void stop() {
+        stopAnimation();
+    }
+
     public final ArrayList<View> getViews() {
         return views;
     }
 
     protected abstract void startAnimation();
+
+    protected abstract void stopAnimation();
 
     /** Подразумивается что элементы будут анимированны по порядку. */
     public static abstract class InSeries extends ElementAnimator {
@@ -98,6 +107,10 @@ public abstract class ElementAnimator {
         protected void startAnimation() {
             animateNext(null, getNextView(null));
         }
+        @Override
+        protected void stopAnimation() {
+            animations.clear();
+        }
     }
 
     /** Волна Вверх */
@@ -111,6 +124,7 @@ public abstract class ElementAnimator {
                     .onEnd(new Subscriber.Twins<Path<View, Float>, Animator>() {
                         @Override
                         public void onCall(Path<View, Float> first, Animator second) {
+                            Log.e(TAG, "onCall: " + getViews().size() + "  " + view);
                             animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
                         }
                     })
