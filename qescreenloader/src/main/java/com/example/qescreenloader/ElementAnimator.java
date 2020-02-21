@@ -1,18 +1,17 @@
 package com.example.qescreenloader;
 
 import android.animation.Animator;
-import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.qegame.animsimple.path.Path;
-import com.qegame.animsimple.path.TranslationY;
-import com.qegame.qeutil.listening.subscriber.Subscriber;
+import com.qegame.qeanim.simple.view.SimpleAnimView;
+import com.qegame.qeanim.simple.view.TranslationY;
+import com.qegame.qeutil.doing.Do;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+
 
 public abstract class ElementAnimator {
 
@@ -54,7 +53,7 @@ public abstract class ElementAnimator {
 
     }
 
-    private static abstract class NativeSeries<A extends Path<View, ?>> extends InSeries {
+    private static abstract class NativeSeries<A extends SimpleAnimView<View>> extends InSeries {
 
         private ArrayList<A> animations;
 
@@ -120,9 +119,9 @@ public abstract class ElementAnimator {
             return TranslationY.builder(view)
                     .to((float) -view.getHeight() / 2)
                     .duration(getDuration())
-                    .onEnd(new Subscriber.Twins<Path<View, Float>, Animator>() {
+                    .doOnEnd(new Do.With<Animator>() {
                         @Override
-                        public void onCall(Path<View, Float> first, Animator second) {
+                        public void work(Animator animator) {
                             animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
                         }
                     })
@@ -143,9 +142,9 @@ public abstract class ElementAnimator {
             return TranslationY.builder(view)
                     .to((float) view.getHeight() / 2)
                     .duration(getDuration())
-                    .onEnd(new Subscriber.Twins<Path<View, Float>, Animator>() {
+                    .doOnEnd(new Do.With<Animator>() {
                         @Override
-                        public void onCall(Path<View, Float> first, Animator second) {
+                        public void work(Animator animator) {
                             animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
                         }
                     })
@@ -166,13 +165,13 @@ public abstract class ElementAnimator {
             return TranslationY.builder(view)
                     .to((float) -view.getHeight() / 2)
                     .duration(getDuration())
-                    .reverse(true)
-                    .onEnd(new Subscriber.Twins<Path<View, Float>, Animator>() {
+                    .doOnEnd(new Do.With<Animator>() {
                         @Override
-                        public void onCall(Path<View, Float> first, Animator second) {
+                        public void work(Animator animator) {
                             animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
                         }
                     })
+                    .reverseOnEnd(true)
                     .build();
         }
 
@@ -185,15 +184,16 @@ public abstract class ElementAnimator {
             return TranslationY.builder(view)
                     .to((float) view.getHeight() / 2)
                     .duration(getDuration())
-                    .reverse(true)
-                    .onEnd(new Subscriber.Twins<Path<View, Float>, Animator>() {
+                    .doOnEnd(new Do.With<Animator>() {
                         @Override
-                        public void onCall(Path<View, Float> first, Animator second) {
+                        public void work(Animator animator) {
                             animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
                         }
                     })
+                    .reverseOnEnd(true)
                     .build();
         }
 
     }
+
 }
