@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 
 import com.qegame.qeutil.androids.QeAndroid;
 import com.qegame.qeutil.androids.views.QeViews;
+import com.qegame.qeutil.doing.Do;
 
 import java.util.ArrayList;
 
@@ -135,7 +136,13 @@ public class QeScreenLoader extends Fragment {
     public void onResume() {
         super.onResume();
 
-        runAnimation();
+        QeViews.doOnMeasureView(getView(), new Do.With<View>() {
+            @Override
+            public void work(View with) {
+                runAnimation();
+            }
+        });
+
 
     }
 

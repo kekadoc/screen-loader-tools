@@ -1,33 +1,64 @@
 package com.example.qescreenloader;
 
 import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.qegame.qeanim.simple.view.SimpleAnimView;
-import com.qegame.qeanim.simple.view.TranslationY;
-import com.qegame.qeutil.doing.Do;
+import com.qegame.qeanim.view.TranslationY;
+import com.qegame.qeutil.listening.subscriber.Subscriber;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public abstract class ElementAnimator {
+    private static final String TAG = "ElementAnimator-TAG";
 
-    private ArrayList<View> views;
+    private Map<View, Animator> animations;
+    private List<View> views;
 
-    public final void run(ArrayList<View> views) {
+    public ElementAnimator() {
+        this.animations = new HashMap<>();
+    }
+
+    /** Создать анимацию для View
+     *
+     * @param view View
+     * @param type Особый тип аниации */
+    protected abstract Animator makeAnimation(@NonNull View view, int type);
+
+    /** Запустить анимацию.
+     * @param views Коллекция View */
+    public final void run(List<View> views) {
         this.views = views;
         startAnimation();
     }
 
+    /** Остановить анимацию */
     public final void stop() {
         stopAnimation();
     }
 
-    public final ArrayList<View> getViews() {
+    /** Список всех View */
+    public final List<View> getViews() {
         return views;
+    }
+
+    /** Запрос на аниматор. */
+    protected final Animator getAnimation(View view) {
+        Animator animator = animations.get(view);
+        if (animator == null) {
+            animator = makeAnimation(view, 0);
+            animations.put(view, animator);
+        }
+        return animator;
     }
 
     protected abstract void startAnimation();
@@ -53,29 +84,19 @@ public abstract class ElementAnimator {
 
     }
 
-    private static abstract class NativeSeries<A extends SimpleAnimView<View>> extends InSeries {
+    private static abstract class NativeSeries extends InSeries {
+        private static final String TAG = "NativeSeries-TAG";
 
-        private ArrayList<A> animations;
+        private static final int REVERSE = 10;
+        private static final int RESTART = 20;
 
         private boolean reverse;
-        private boolean startOverOnLast;
 
-        NativeSeries() {
-            this.animations = new ArrayList<>();
-        }
-
-        ArrayList<A> getAnimations() {
-            return animations;
-        }
-
-        /** Создание анимации для View */
-        protected abstract A makeAnim(@NonNull View view);
+        private int orderType = REVERSE;
 
         /** Анимировать следующий объект. */
-        protected void animateNext(@Nullable A previewAnim, @NonNull View view) {
-            A nextAnimation = makeAnim(view);
-            getAnimations().add(getViews().indexOf(view), nextAnimation);
-            nextAnimation.start();
+        protected void animateNext(@Nullable Animator previewAnim, @NonNull View view) {
+            getAnimation(view).start();
         }
 
         @Override
@@ -86,10 +107,11 @@ public abstract class ElementAnimator {
             int size = getViews().size();
 
             if (index == (size - 1)) {
-                if (startOverOnLast) return getViews().get(0);
-                else {
-                    reverse = true;
-                    return getViews().get(size - 2);
+                switch (orderType) {
+                    case RESTART: return getViews().get(0);
+                    case REVERSE:
+                        reverse = true;
+                        return getViews().get(size - 2);
                 }
             }
             if (index == 0 && reverse) {
@@ -107,93 +129,83 @@ public abstract class ElementAnimator {
         }
         @Override
         protected void stopAnimation() {
-            animations.clear();
+
         }
     }
 
     /** Волна Вверх */
-    public static final class WaveTop extends NativeSeries<TranslationY<View>> {
+    public static final class WaveTop extends NativeSeries {
+        private static final String TAG = "WaveTop-TAG";
 
         @Override
-        protected TranslationY<View> makeAnim(@NonNull View view) {
+        protected Animator makeAnimation(@NonNull View view, int type) {
             return TranslationY.builder(view)
+                    .from(0f)
                     .to((float) -view.getHeight() / 2)
                     .duration(getDuration())
-                    .doOnEnd(new Do.With<Animator>() {
+                    .onEnd(new Subscriber.Single<ObjectAnimator>() {
                         @Override
-                        public void work(Animator animator) {
-                            animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
+                        public void onCall(ObjectAnimator param) {
+                            animateNext(getAnimation(view), getNextView(view));
                         }
                     })
+                    .repeatCount(1)
                     .build();
-        }
-        @Override
-        protected void animateNext(@Nullable TranslationY<View> previewAnim, @NonNull View view) {
-            if (previewAnim != null) previewAnim.reverse();
-            super.animateNext(previewAnim, view);
         }
 
     }
     /** Волна Вниз */
-    public static final class WaveBottom extends NativeSeries<TranslationY<View>> {
+    public static final class WaveBottom extends NativeSeries {
 
         @Override
-        protected TranslationY<View> makeAnim(@NonNull View view) {
+        protected Animator makeAnimation(@NonNull View view, int type) {
             return TranslationY.builder(view)
                     .to((float) view.getHeight() / 2)
                     .duration(getDuration())
-                    .doOnEnd(new Do.With<Animator>() {
+                    .onEnd(new Subscriber.Single<ObjectAnimator>() {
                         @Override
-                        public void work(Animator animator) {
-                            animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
+                        public void onCall(ObjectAnimator param) {
+
                         }
                     })
                     .build();
         }
-        @Override
-        protected void animateNext(@Nullable TranslationY<View> previewAnim, @NonNull View view) {
-            if (previewAnim != null) previewAnim.reverse();
-            super.animateNext(previewAnim, view);
-        }
-
     }
     /** Последовательно Вверх */
-    public static final class SequentiallyTop extends NativeSeries<TranslationY<View>> {
+    public static final class SequentiallyTop extends NativeSeries {
 
         @Override
-        protected TranslationY<View> makeAnim(@NonNull View view) {
+        protected Animator makeAnimation(@NonNull View view, int type) {
             return TranslationY.builder(view)
                     .to((float) -view.getHeight() / 2)
                     .duration(getDuration())
-                    .doOnEnd(new Do.With<Animator>() {
+                    .onEnd(new Subscriber.Single<ObjectAnimator>() {
                         @Override
-                        public void work(Animator animator) {
-                            animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
+                        public void onCall(ObjectAnimator param) {
+                            animateNext(getAnimation(view), getNextView(view));
                         }
                     })
-                    .reverseOnEnd(true)
+                    .repeatCount(1)
                     .build();
         }
-
     }
     /** Последовательно Вниз */
-    public static final class SequentiallyBottom extends NativeSeries<TranslationY<View>> {
+    public static final class SequentiallyBottom extends NativeSeries {
 
         @Override
-        protected TranslationY<View> makeAnim(@NonNull View view) {
+        protected Animator makeAnimation(@NonNull View view, int type) {
             return TranslationY.builder(view)
                     .to((float) view.getHeight() / 2)
                     .duration(getDuration())
-                    .doOnEnd(new Do.With<Animator>() {
+                    .onEnd(new Subscriber.Single<ObjectAnimator>() {
                         @Override
-                        public void work(Animator animator) {
-                            animateNext(getAnimations().get(getViews().indexOf(view)), getNextView(view));
+                        public void onCall(ObjectAnimator param) {
+                            animateNext(getAnimation(view), getNextView(view));
                         }
                     })
-                    .reverseOnEnd(true)
+                    .repeatCount(1)
                     .build();
         }
-
     }
 
 }
