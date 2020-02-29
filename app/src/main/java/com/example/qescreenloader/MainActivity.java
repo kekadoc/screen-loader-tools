@@ -8,11 +8,8 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.AsyncTaskLoader;
 import androidx.loader.content.Loader;
 
-import android.app.Application;
-import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -25,8 +22,6 @@ import com.qegame.qeutil.doing.Do;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity-TAG";
@@ -43,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         this.fragment = findViewById(R.id.fragment);
 
         QeScreenLoader qeScreenLoader = new QeScreenLoader();
+        qeScreenLoader.setColorElements(Color.RED);
         //qeScreenLoader.setColorBackground(Color.RED);
 
         setFragment(qeScreenLoader);

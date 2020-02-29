@@ -8,6 +8,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.qegame.qeanim.AnimCollector;
 import com.qegame.qeanim.view.TranslationY;
 import com.qegame.qeutil.listening.subscriber.Subscriber;
 
@@ -17,15 +18,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+/** Аниматор */
 public abstract class ElementAnimator {
-    private static final String TAG = "ElementAnimator-TAG";
 
-    private Map<View, Animator> animations;
+    private AnimCollector<Animator, View> animCollector;
     private List<View> views;
 
     public ElementAnimator() {
-        this.animations = new HashMap<>();
+        this.animCollector = new AnimCollector.NonNullCollector<Animator, View>() {
+            @NonNull
+            @Override
+            protected Animator initAnimation(@NonNull View target, int type) {
+                return makeAnimation(target, type);
+            }
+        };
     }
 
     /** Создать анимацию для View
@@ -34,9 +40,12 @@ public abstract class ElementAnimator {
      * @param type Особый тип аниации */
     protected abstract Animator makeAnimation(@NonNull View view, int type);
 
+    protected abstract void startAnimation();
+    protected abstract void stopAnimation();
+
     /** Запустить анимацию.
      * @param views Коллекция View */
-    public final void run(List<View> views) {
+    public final void run(@NonNull List<View> views) {
         this.views = views;
         startAnimation();
     }
@@ -52,18 +61,16 @@ public abstract class ElementAnimator {
     }
 
     /** Запрос на аниматор. */
+    protected final Animator getAnimation(View view, int type) {
+        return animCollector.getAnimation(view, type);
+    }
+    /** Запрос на аниматор. */
     protected final Animator getAnimation(View view) {
-        Animator animator = animations.get(view);
-        if (animator == null) {
-            animator = makeAnimation(view, 0);
-            animations.put(view, animator);
-        }
-        return animator;
+        return getAnimation(view, 0);
     }
 
-    protected abstract void startAnimation();
 
-    protected abstract void stopAnimation();
+
 
     /** Подразумивается что элементы будут анимированны по порядку. */
     public static abstract class InSeries extends ElementAnimator {

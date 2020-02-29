@@ -15,8 +15,14 @@ import com.qegame.qeutil.androids.views.QeViews;
 import com.qegame.qeutil.doing.Do;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class QeScreenLoader extends Fragment {
+
+    // TODO: 01.03.2020 Отображать прогресс
+    // TODO: 01.03.2020 Расширить возможности интерфейса Element
+    // TODO: 01.03.2020 Позиционирование елементов. По умолчанию он все линере
+    // TODO: 01.03.2020 Больше различных View
 
     enum Type {
         WAVE_TOP() {
@@ -52,15 +58,15 @@ public class QeScreenLoader extends Fragment {
     }
 
     /** Views */
-    private ArrayList<View> elements;
+    private List<View> elements;
 
     /** Количество элементов */
     private int elementCount = 5;
-    /** Маргины */
-    private int[] elementMargin = new int[] {10, 10, 10, 10};
+    @ColorInt
+    private int elementColor;
+
     /** Контейнер объектов */
     private ViewGroup elementContainer;
-
     private ViewGroup background;
 
     private ElementAnimator elementAnimator;
@@ -78,22 +84,20 @@ public class QeScreenLoader extends Fragment {
         this.colorBackground = color;
         if (background != null) background.setBackgroundColor(color);
     }
-
+    public void setColorElements(@ColorInt int color) {
+        this.elementColor = color;
+        if (elements == null) return;
+        for (View view : elements) {
+            if (view instanceof Element)
+                ((Element) view).setColor(color);
+        }
+    }
     public void setType(Type type) {
         if (type == null) elementAnimator = null;
         else this.elementAnimator = type.getAnimator();
     }
-
-    public void setElementAnimator(ElementAnimator elementAnimator) {
-        this.elementAnimator = elementAnimator;
-    }
-
     public void setElementCount(int elementCount) {
         this.elementCount = elementCount;
-    }
-
-    public void setElementMargin(int[] elementMargin) {
-        this.elementMargin = elementMargin;
     }
 
 
@@ -105,14 +109,14 @@ public class QeScreenLoader extends Fragment {
     private void runAnimation() {
         elementAnimator.run(elements);
     }
-
     private void initElements() {
         elementContainer.removeAllViews();
         for (int i = 0; i < elementCount; i++) {
             View view = initElement(i);
+            if (view instanceof Element)
+                ((Element) view).setColor(elementColor);
             elements.add(view);
             elementContainer.addView(view);
-            QeViews.setMargins(view, elementMargin[0], elementMargin[1], elementMargin[2], elementMargin[3]);
         }
     }
 
@@ -142,7 +146,6 @@ public class QeScreenLoader extends Fragment {
                 runAnimation();
             }
         });
-
 
     }
 

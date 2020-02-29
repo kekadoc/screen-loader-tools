@@ -4,16 +4,22 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.Nullable;
 
 import com.qegame.qeutil.androids.QeAndroid;
 
-public class Ball extends View {
+public class Ball extends View implements Element {
     private static final String TAG = "Ball-TAG";
 
     private int defaultSize;
+
+    @ColorInt
+    private int color;
 
     private Paint paint;
 
@@ -37,9 +43,17 @@ public class Ball extends View {
     private void init(Context context, @Nullable AttributeSet attrs) {
         this.paint = new Paint();
         this.paint.setStrokeWidth(1);
-        this.paint.setColor(QeAndroid.getThemeColor(context, QeAndroid.ThemeColor.ACCENT));
+        this.color = QeAndroid.getThemeColor(context, QeAndroid.ThemeColor.ACCENT);
+        this.paint.setColor(color);
         this.defaultSize = (int) context.getResources().getDimension(R.dimen.ball_size_default);
         setElevation(20);
+    }
+
+    @Override
+    public void setColor(int color) {
+        this.color = color;
+        this.paint.setColor(color);
+        invalidate();
     }
 
     @Override
@@ -49,11 +63,20 @@ public class Ball extends View {
 
         setMeasuredDimension(width, height);
     }
-
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
 
-        canvas.drawCircle(getWidth() / 2, getHeight() / 2, Math.min(getWidth(), getHeight()) / 2, paint);
+        canvas.drawCircle(getWidth() / 2.0f, getHeight() / 2.0f, Math.min(getWidth(), getHeight()) / 2.0f, paint);
     }
+    @Override
+    public void setLayoutParams(ViewGroup.LayoutParams params) {
+        if (params instanceof ViewGroup.MarginLayoutParams) {
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) params;
+            int dp = (int) QeAndroid.dp(getContext(), 8);
+            lp.setMargins(dp, dp, dp, dp);
+        }
+        super.setLayoutParams(params);
+    }
+
 }
